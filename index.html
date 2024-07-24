@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Global 50 con Explicaciones de Sectores</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            cursor: pointer;
+        }
+        .card:hover {
+            background-color: #e0e0e0;
+        }
+        .selected-content {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        .option {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 5px;
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .option:hover {
+            background-color: #e0e0e0;
+        }
+        .option.correct {
+            background-color: #d4edda;
+        }
+        .option.incorrect {
+            background-color: #f8d7da;
+        }
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simulador Global 50 con Explicaciones de Sectores</h1>
+    
+    <h2>Conceptos Clave</h2>
+    <div id="concept-grid" class="grid"></div>
+    <div id="selected-concept" class="selected-content" style="display:none;"></div>
+    
+    <h2>Sectores Afectados</h2>
+    <div id="sector-grid" class="grid"></div>
+    <div id="selected-sector" class="selected-content" style="display:none;"></div>
+    
+    <h2>Resumen</h2>
+    <p id="summary"></p>
+    
+    <h2>Preguntas de Selección Múltiple</h2>
+    <div id="mc-questions"></div>
+
+    <script>
+        const concepts = [
+            { title: "Salud Reimaginada", description: "Redefinición de la salud mental y física, apoyando vidas más largas y saludables." },
+            { title: "Colaboración Avanzada", description: "Mejora en la resolución de problemas, innovación y confianza a través de nuevas estructuras colaborativas." },
+            { title: "Naturaleza Restaurada", description: "Minimización de riesgos ambientales y restauración de ecosistemas cruciales." },
+            { title: "Sociedades Empoderadas", description: "Soluciones para las necesidades más complejas y universales de la humanidad." }
+        ];
+
+        const sectors = [
+            { name: "Agricultura y Alimentación", explanation: "Transformación de los sistemas de producción de alimentos, incluyendo agricultura vertical y alimentos sintéticos." },
+            { name: "Materiales y Biotecnología", explanation: "Desarrollo de nuevos materiales sostenibles y avances en ingeniería genética y biología sintética." },
+            { name: "Automotriz, Aeroespacial y Aviación", explanation: "Revolución en movilidad con vehículos autónomos y nuevas formas de transporte aéreo y espacial." },
+            { name: "Químicos y Petroquímicos", explanation: "Transición hacia productos químicos verdes y materiales biodegradables." },
+            { name: "Tecnologías y Sistemas de Comunicación", explanation: "Evolución de redes 5G y 6G, y nuevas formas de conectividad global." },
+            { name: "Bienes de Consumo, Servicios y Comercio Minorista", explanation: "Personalización masiva y experiencias de compra inmersivas." },
+            { name: "Ciberseguridad y Seguridad de la Información", explanation: "Protección avanzada contra amenazas cibernéticas y gestión de datos en la era cuántica." },
+            { name: "Ciencia de Datos, IA y Aprendizaje Automático", explanation: "IA generalizada y sistemas de aprendizaje autónomo en todos los sectores." },
+            { name: "Educación", explanation: "Aprendizaje personalizado y adaptativo, y nuevas formas de adquisición de habilidades." },
+            { name: "Energía, Petróleo, Gas y Energías Renovables", explanation: "Transición completa a energías limpias y sistemas de almacenamiento avanzados." },
+            { name: "Servicios Financieros e Inversión", explanation: "Democratización de las finanzas y nuevos modelos de inversión en tecnologías emergentes." },
+            { name: "Salud y Atención Médica", explanation: "Medicina personalizada, terapias genéticas y sistemas de salud preventiva." },
+            { name: "Tecnologías Inmersivas", explanation: "Realidad virtual y aumentada integradas en la vida cotidiana y el trabajo." },
+            { name: "Infraestructura y Construcción", explanation: "Ciudades inteligentes y autosostenibles, y nuevos materiales de construcción ecológicos." },
+            { name: "Seguros y Reaseguros", explanation: "Modelos predictivos avanzados y nuevos tipos de cobertura para riesgos emergentes." },
+            { name: "Logística, Envíos y Fletes", explanation: "Cadenas de suministro autónomas y sistemas de entrega por drones y robots." },
+            { name: "Manufactura", explanation: "Fabricación aditiva (impresión 3D) a escala industrial y fábricas totalmente automatizadas." },
+            { name: "Medios y Entretenimiento", explanation: "Contenido personalizado y experiencias de entretenimiento inmersivas." },
+            { name: "Metales y Minería", explanation: "Minería sostenible y reciclaje avanzado de metales." },
+            { name: "Bienes Raíces", explanation: "Edificios inteligentes y nuevos conceptos de espacios de vida y trabajo." },
+            { name: "Viajes y Turismo", explanation: "Turismo espacial y experiencias de viaje virtuales." },
+            { name: "Servicios Públicos", explanation: "Redes inteligentes y gestión eficiente de recursos como agua y electricidad." },
+            { name: "Servicios Gubernamentales", explanation: "Gobierno digital y nuevas formas de participación ciudadana." },
+            { name: "Servicios Profesionales", explanation: "Asesoramiento basado en IA y nuevas profesiones emergentes." }
+        ];
+
+        const summary = `El documento "Global 50" presenta una visión del futuro centrada en el crecimiento, la prosperidad y el bienestar. Aborda temas como la salud reimaginada, la colaboración avanzada, la restauración de la naturaleza y el empoderamiento de las sociedades. Estas áreas de oportunidad buscan aprovechar los avances tecnológicos y científicos para mejorar la calidad de vida y abordar los desafíos globales.`;
+
+        const mcQuestions = [
+            {
+                question: "¿Cuál es el enfoque principal del informe Global 50?",
+                options: [
+                    "Predicciones económicas a corto plazo",
+                    "Oportunidades para el crecimiento, la prosperidad y el bienestar",
+                    "Análisis de tendencias políticas globales",
+                    "Estrategias de marketing digital"
+                ],
+                correctAnswer: 1,
+                explanation: "El informe se centra en presentar oportunidades para el crecimiento, la prosperidad y el bienestar en el futuro, abarcando diversas áreas como salud, colaboración, naturaleza y sociedades."
+            },
+            {
+                question: "¿Qué papel juega la tecnología en las oportunidades presentadas en el informe?",
+                options: [
+                    "Es irrelevante para las oportunidades propuestas",
+                    "Solo se menciona en relación con la salud",
+                    "Es fundamental en casi todas las oportunidades presentadas",
+                    "Se considera un obstáculo para el progreso"
+                ],
+                correctAnswer: 2,
+                explanation: "La tecnología juega un papel fundamental en casi todas las oportunidades presentadas, desde avances en medicina hasta inteligencia artificial y sostenibilidad ambiental."
+            }
+        ];
+
+        function createConceptGrid() {
+            const grid = document.getElementById('concept-grid');
+            concepts.forEach((concept, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.textContent = concept.title;
+                card.onclick = () => showConcept(index);
+                grid.appendChild(card);
+            });
+        }
+
+        function showConcept(index) {
+            const selectedConcept = document.getElementById('selected-concept');
+            selectedConcept.innerHTML = `
+                <h3>${concepts[index].title}</h3>
+                <p>${concepts[index].description}</p>
+            `;
+            selectedConcept.style.display = 'block';
+        }
+
+        function createSectorGrid() {
+            const grid = document.getElementById('sector-grid');
+            sectors.forEach((sector, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.textContent = sector.name;
+                card.onclick = () => showSector(index);
+                grid.appendChild(card);
+            });
+        }
+
+        function showSector(index) {
+            const selectedSector = document.getElementById('selected-sector');
+            selectedSector.innerHTML = `
+                <h3>${sectors[index].name}</h3>
+                <p>${sectors[index].explanation}</p>
+            `;
+            selectedSector.style.display = 'block';
+        }
+
+        function showSummary() {
+            document.getElementById('summary').textContent = summary;
+        }
+
+        function createMCQuestions() {
+            const container = document.getElementById('mc-questions');
+            mcQuestions.forEach((q, qIndex) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question';
+                questionDiv.innerHTML = `<h3>${q.question}</h3>`;
+                
+                q.options.forEach((option, oIndex) => {
+                    const button = document.createElement('button');
+                    button.className = 'option';
+                    button.textContent = option;
+                    button.onclick = () => checkAnswer(qIndex, oIndex);
+                    questionDiv.appendChild(button);
+                });
+
+                const explanation = document.createElement('p');
+                explanation.className = 'explanation';
+                explanation.id = `explanation-${qIndex}`;
+                questionDiv.appendChild(explanation);
+
+                container.appendChild(questionDiv);
+            });
+        }
+
+        function checkAnswer(questionIndex, selectedIndex) {
+            const question = mcQuestions[questionIndex];
+            const options = document.querySelectorAll(`#mc-questions .question:nth-child(${questionIndex + 1}) .option`);
+            const explanation = document.getElementById(`explanation-${questionIndex}`);
+
+            options.forEach((option, index) => {
+                if (index === question.correctAnswer) {
+                    option.classList.add('correct');
+                } else {
+                    option.classList.remove('correct');
+                }
+                if (index === selectedIndex && index !== question.correctAnswer) {
+                    option.classList.add('incorrect');
+                } else {
+                    option.classList.remove('incorrect');
+                }
+            });
+
+            explanation.textContent = question.explanation;
+            explanation.style.display = 'block';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            createConceptGrid();
+            createSectorGrid();
+            showSummary();
+            createMCQuestions();
+        });
+    </script>
+</body>
+</html>
+
